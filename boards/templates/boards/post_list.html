@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Portfolio Board{% endblock %}
+{% block content %}
+<style>
+  .thumb{position:relative}
+  .thumb video{width:100%;height:100%;object-fit:cover;display:block}
+  .play{position:absolute;inset:0;margin:auto;width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;font-size:1.1rem;padding-left:3px;pointer-events:none}
+  .hero{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:var(--card);margin-bottom:36px}
+  .hero-top{background:linear-gradient(135deg,var(--accent),#a78bfa);color:#fff;padding:36px 32px;display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+  .hero-avatar{width:96px;height:96px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.7);display:grid;place-items:center;font-size:2.4rem;font-weight:700;flex-shrink:0}
+  .hero-text{flex:1;min-width:240px}
+  .hero-text h1{margin:0 0 2px;font-size:1.8rem}
+  .hero-role{opacity:.9;font-size:.98rem;margin-bottom:10px}
+  .hero-intro{margin:0;opacity:.95;max-width:560px}
+  .hero-links{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .hero-links a{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;padding:5px 14px;font-size:.84rem}
+  .hero-links a:hover{background:rgba(255,255,255,.3)}
+  .skills{padding:24px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+  .skills h4{margin:0 0 10px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.84rem}
+  .chip.main{background:var(--accent);border-color:var(--accent);color:#fff}
+</style>
+
+{% if banner and page_obj.number == 1 %}
+<section class="hero">
+  <div class="hero-top">
+    {% if banner.avatar %}<img class="hero-avatar" src="{{ banner.avatar.url }}" alt="{{ banner.name }}">{% else %}<div class="hero-avatar">{{ banner.name|first|upper }}</div>{% endif %}
+    <div class="hero-text">
+      <h1>{{ banner.name }}</h1>
+      {% if banner.role %}<div class="hero-role">{{ banner.role }}</div>{% endif %}
+      {% if banner.intro %}<p class="hero-intro">{{ banner.intro|linebreaksbr }}</p>{% endif %}
+      {% if banner.github_url or banner.email %}
+      <div class="hero-links">
+        {% if banner.github_url %}<a href="{{ banner.github_url }}" target="_blank" rel="noopener">GitHub</a>{% endif %}
+        {% if banner.email %}<a href="mailto:{{ banner.email }}">Email</a>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% if skill_groups %}
+  <div class="skills">
+    {% for category, skills in skill_groups %}
+    <div>
+      <h4>{{ category }}</h4>
+      <div class="chips">{% for s in skills %}<span class="chip{% if s.is_main %} main{% endif %}">{{ s.name }}</span>{% endfor %}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<div class="row between" style="margin-bottom:20px">
+  <h1 style="margin:0">Projects</h1>
+  {% if user.is_authenticated %}<a class="btn" href="{% url 'boards:post_create' %}">+ 새 글</a>{% endif %}
+</div>
+<div class="grid">
+  {% for post in posts %}
+  <a class="post-card" href="{% url 'boards:post_detail' post.pk %}">
+    <div class="thumb">
+      {% with vt=post.video_thumb %}{% if vt %}
+        {% if vt.0 == "image" %}<img src="{{ vt.1 }}" alt="" loading="lazy">{% else %}<video src="{{ vt.1 }}#t=0.5" muted preload="metadata" playsinline></video>{% endif %}
+        <span class="play">▶</span>
+      {% else %}{% for f in post.files.all %}{% if f.is_image %}<img src="{{ f.file.url }}" alt="">{% endif %}{% endfor %}{% endif %}{% endwith %}
+    </div>
+    <div class="post-body">
+      <h3>{{ post.title }}</h3>
+      <div class="muted">{{ post.author.profile.nickname|default:"익명" }} · {{ post.created_at|date:"Y.m.d" }} · 💬 {{ post.comments.count }}</div>
+    </div>
+  </a>
+  {% empty %}
+  <div class="empty" style="grid-column:1/-1">아직 등록된 글이 없어요.</div>
+  {% endfor %}
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pager">
+  {% if page_obj.has_previous %}
+    <a class="btn ghost sm" href="?page=1">« 처음</a>
+    <a class="btn ghost sm" href="?page={{ page_obj.previous_page_number }}">‹ 이전</a>
+  {% endif %}
+  <span class="muted">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a class="btn ghost sm" href="?page={{ page_obj.next_page_number }}">다음 ›</a>
+    <a class="btn ghost sm" href="?page={{ page_obj.paginator.num_pages }}">마지막 »</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

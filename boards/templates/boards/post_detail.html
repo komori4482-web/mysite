@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block width %}mid{% endblock %}
+{% block content %}
+<style>
+  .video{position:relative;aspect-ratio:16/9;margin:20px 0;border-radius:var(--r);overflow:hidden;background:#000}
+  .video iframe,.video video{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .reply{margin:12px 0 0 14px;padding:10px 0 0 14px;border-left:2px solid var(--line)}
+  .reply-form{margin:12px 0 0 14px}
+</style>
+<article class="card">
+  <h1 style="margin-bottom:6px">{{ post.title }}</h1>
+  <div class="muted"><b>{{ post.author.profile.nickname|default:"익명" }}</b> · {{ post.created_at|date:"Y.m.d H:i" }}{% if post.updated_at|date:"YmdHi" != post.created_at|date:"YmdHi" %} (수정됨){% endif %}</div>
+  {% with v=post.video_embed %}{% if v %}
+  <div class="video">
+    {% if v.0 == "iframe" %}<iframe src="{{ v.1 }}" title="{{ post.title }}" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    {% else %}<video src="{{ v.1 }}" controls preload="metadata"></video>{% endif %}
+  </div>
+  {% endif %}{% endwith %}
+  {% with files=post.files.all %}
+  <div class="gallery">{% for f in files %}{% if f.is_image %}<img src="{{ f.file.url }}" alt="{{ f.original_name }}" data-zoom>{% endif %}{% endfor %}</div>
+  <div class="content">{{ post.content }}</div>
+  <ul class="files">{% for f in files %}{% if not f.is_image %}<li><a href="{{ f.file.url }}" download="{{ f.original_name }}">📎 {{ f.original_name }}</a></li>{% endif %}{% endfor %}</ul>
+  {% endwith %}
+  <div class="row between" style="margin-top:20px">
+    <a class="btn ghost sm" href="{% url 'boards:post_list' %}">← 목록</a>
+    {% if user == post.author %}
+    <div class="row">
+      <a class="btn ghost sm" href="{% url 'boards:post_update' post.pk %}">수정</a>
+      <a class="btn danger sm" href="{% url 'boards:post_delete' post.pk %}">삭제</a>
+    </div>
+    {% endif %}
+  </div>
+</article>
+
+<section class="card" style="margin-top:20px">
+  <h2>댓글 {{ post.comments.count }}</h2>
+  {% for c in comments %}
+  <div class="comment" id="c{{ c.pk }}">
+    <div class="row between">
+      <div><b>{{ c.author.profile.nickname|default:"익명" }}</b> <span class="muted">· {{ c.created_at|date:"Y.m.d H:i" }}</span></div>
+      <div class="row">
+        {% if user.is_authenticated %}<button type="button" class="link-btn" data-reply="{{ c.pk }}">답글</button>{% endif %}
+        {% if user == c.author %}
+        <a class="link-btn" href="{% url 'boards:comment_update' c.pk %}">수정</a>
+        <form class="inline" method="post" action="{% url 'boards:comment_delete' c.pk %}" data-confirm="{% if c.replies.all %}답글도 함께 삭제됩니다. {% endif %}댓글을 삭제할까요?">{% csrf_token %}<button class="link-btn" style="color:var(--danger)" type="submit">삭제</button></form>
+        {% endif %}
+      </div>
+    </div>
+    <div style="margin-top:4px;white-space:pre-wrap">{{ c.content }}</div>
+
+    {% for r in c.replies.all %}
+    <div class="reply" id="c{{ r.pk }}">
+      <div class="row between">
+      <div><b>{{ r.author.profile.nickname|default:"익명" }}</b> <span class="muted">· {{ r.created_at|date:"Y.m.d H:i" }}</span></div>
+      <div class="row">
+        {% if user == r.author %}
+        <a class="link-btn" href="{% url 'boards:comment_update' r.pk %}">수정</a>
+        <form class="inline" method="post" action="{% url 'boards:comment_delete' r.pk %}" data-confirm="답글을 삭제할까요?">{% csrf_token %}<button class="link-btn" style="color:var(--danger)" type="submit">삭제</button></form>
+        {% endif %}
+      </div>
+    </div>
+      <div style="margin-top:4px;white-space:pre-wrap">{{ r.content }}</div>
+    </div>
+    {% endfor %}
+
+    {% if user.is_authenticated %}
+    <form class="reply-form" id="reply-form-{{ c.pk }}" method="post" action="{% url 'boards:comment_create' post.pk %}" hidden>{% csrf_token %}
+      <input type="hidden" name="parent" value="{{ c.pk }}">
+      <div class="field"><textarea name="content" style="min-height:70px" placeholder="답글을 입력하세요" required></textarea></div>
+      <button class="btn sm" type="submit">답글 등록</button>
+    </form>
+    {% endif %}
+  </div>
+  {% empty %}
+  <p class="muted">첫 댓글을 남겨보세요.</p>
+  {% endfor %}
+
+  {% if user.is_authenticated %}
+  <form method="post" action="{% url 'boards:comment_create' post.pk %}" style="margin-top:16px">{% csrf_token %}
+    <div class="field">{{ comment_form.content }}</div>
+    <button class="btn sm" type="submit">댓글 등록</button>
+  </form>
+  {% else %}
+  <p class="muted" style="margin-top:16px"><a href="{% url 'accounts:login' %}"><b>로그인</b></a> 후 댓글을 남길 수 있어요.</p>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  // 답글 버튼: 해당 댓글 아래 답글 입력창을 열고 닫기
+  document.querySelectorAll('[data-reply]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = document.getElementById('reply-form-' + b.dataset.reply);
+      f.hidden = !f.hidden;
+      if (!f.hidden) f.querySelector('textarea').focus();
+    });
+  });
+</script>
+{% endblock %}

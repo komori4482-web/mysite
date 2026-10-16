@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}인증 메일 다시 받기{% endblock %}
+{% block width %}narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>인증 메일 다시 받기</h1>
+  <form method="post">{% csrf_token %}
+    {% include "form_fields.html" %}
+    <button class="btn" style="width:100%" type="submit">보내기</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}로그인{% endblock %}
+{% block width %}narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>로그인</h1>
+
+  {% if form.errors and form.login_error_code != "invalid_username" %}
+  <div class="alert error">
+    {% if form.login_error_code == "invalid_password" %}
+      <p style="margin:0">비밀번호가 맞지 않습니다.</p>
+    {% elif form.login_error_code == "inactive" %}
+      <p style="margin:0 0 6px">이메일 인증이 완료되지 않았거나 사용할 수 없는 계정입니다.</p>
+      <a href="{% url 'accounts:resend_activation' %}"><b>인증 메일 다시 받기 →</b></a>
+    {% else %}
+      <p style="margin:0">아이디와 비밀번호를 모두 입력해주세요.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <form method="post">{% csrf_token %}
+    <div class="field">
+      <label for="{{ form.username.id_for_label }}">이메일</label>
+      {{ form.username }}
+    </div>
+    <div class="field">
+      <label for="{{ form.password.id_for_label }}">비밀번호</label>
+      {{ form.password }}
+    </div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn" style="width:100%" type="submit">로그인</button>
+  </form>
+  <p class="muted" style="text-align:center;margin-top:12px"><a href="{% url 'accounts:password_reset' %}">비밀번호를 잊으셨나요?</a> · <a href="{% url 'accounts:resend_activation' %}">인증 메일 다시 받기</a></p>
+
+  <p class="muted" style="text-align:center;margin-top:16px">계정이 없나요? <a href="{% url 'accounts:signup' %}"><b>회원가입</b></a></p>
+  <p class="muted" style="text-align:center;margin-top:4px;font-size:.78rem"><a href="{% url 'admin:index' %}">혹시 관리자이신가요?</a></p>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if form.login_error_code == "invalid_username" %}
+<script>
+  // 존재하지 않는 아이디: 알림창을 띄우고 확인을 누르면 회원가입 페이지로 이동
+  alert("계정이 존재하지 않습니다.");
+  location.replace("{% url 'accounts:signup' %}");
+</script>
+{% endif %}
+{% endblock %}

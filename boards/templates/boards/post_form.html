@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}글 수정{% else %}새 글 작성{% endif %}{% endblock %}
+{% block width %}mid{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>{% if object %}글 수정{% else %}새 글 작성{% endif %}</h1>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {% include "form_fields.html" %}
+    <div id="previews" class="previews" style="margin:-6px 0 16px"></div>
+    <div class="row">
+      <button class="btn" type="submit">{% if object %}수정 완료{% else %}등록{% endif %}</button>
+      <a class="btn ghost" href="{% if object %}{% url 'boards:post_detail' object.pk %}{% else %}{% url 'boards:post_list' %}{% endif %}">취소</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // 선택한 파일 미리보기
+  var input = document.getElementById('id_files');
+  if (input) {
+    input.addEventListener('change', function () {
+      var box = document.getElementById('previews');
+      box.innerHTML = '';
+      Array.from(input.files).forEach(function (file) {
+        if (file.type.startsWith('image/')) {
+          var img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          box.appendChild(img);
+        } else {
+          var s = document.createElement('span');
+          s.textContent = '📎 ' + file.name;
+          box.appendChild(s);
+        }
+      });
+    });
+  }
+</script>
+{% endblock %}

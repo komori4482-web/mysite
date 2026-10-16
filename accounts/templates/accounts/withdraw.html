@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}회원 탈퇴{% endblock %}
+{% block width %}narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>회원 탈퇴</h1>
+  <p>정말 탈퇴하시겠어요? 프로필, 작성한 게시글과 댓글이 모두 삭제되며 되돌릴 수 없습니다.</p>
+  <form method="post">{% csrf_token %}
+    <div class="row">
+      <button class="btn danger" type="submit">탈퇴하기</button>
+      <a class="btn ghost" href="{% url 'accounts:profile_detail' %}">취소</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

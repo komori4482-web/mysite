@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}페이지를 찾을 수 없음{% endblock %}
+{% block width %}narrow{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center">
+  <h1>페이지를 찾을 수 없어요</h1>
+  <a class="btn ghost" href="{% url 'boards:post_list' %}">목록으로</a>
+</div>
+{% endblock %}

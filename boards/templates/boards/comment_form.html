@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}댓글 수정{% endblock %}
+{% block width %}mid{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>댓글 수정</h1>
+  <form method="post">{% csrf_token %}
+    {% include "form_fields.html" %}
+    <div class="row">
+      <button class="btn" type="submit">저장</button>
+      <a class="btn ghost" href="{% url 'boards:post_detail' comment.post.pk %}">취소</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

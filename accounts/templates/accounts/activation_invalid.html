@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}인증 실패{% endblock %}
+{% block width %}narrow{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center">
+  <h1>인증 링크를 사용할 수 없어요</h1>
+  <p>링크가 만료됐거나 이미 사용된 링크예요.</p>
+  <div class="row" style="justify-content:center">
+    <a class="btn" href="{% url 'accounts:resend_activation' %}">인증 메일 다시 받기</a>
+    <a class="btn ghost" href="{% url 'accounts:login' %}">로그인</a>
+  </div>
+</div>
+{% endblock %}

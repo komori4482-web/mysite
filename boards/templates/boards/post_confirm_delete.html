@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}글 삭제{% endblock %}
+{% block width %}narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>글 삭제</h1>
+  <p>"<b>{{ object.title }}</b>" 글을 삭제할까요? 댓글도 함께 삭제됩니다.</p>
+  <form method="post">{% csrf_token %}
+    <div class="row">
+      <button class="btn danger" type="submit">삭제</button>
+      <a class="btn ghost" href="{% url 'boards:post_detail' object.pk %}">취소</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

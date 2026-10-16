@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}요청 완료{% endblock %}
+{% block width %}narrow{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center">
+  <h1>요청을 받았어요</h1>
+  <p>인증이 필요한 계정이라면 입력한 이메일로 인증 메일을 보냈어요.</p>
+  <a class="btn ghost" href="{% url 'accounts:login' %}">로그인으로</a>
+</div>
+{% endblock %}

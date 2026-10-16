@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}프로필 수정{% endblock %}
+{% block width %}narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>프로필 수정</h1>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {% include "form_fields.html" %}
+    <div class="row">
+      <button class="btn" type="submit">저장</button>
+      <a class="btn ghost" href="{% url 'accounts:profile_detail' %}">취소</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
