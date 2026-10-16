@@ -28,9 +28,10 @@ def env_list(name, default=""):
 
 
 # ───────────── 핵심 보안 설정 ─────────────
-DEBUG = env_bool("DJANGO_DEBUG", True)
+# Render 가이드의 DEBUG / SECRET_KEY 이름도 함께 지원한다 (DJANGO_ 접두사가 우선).
+DEBUG = env_bool("DJANGO_DEBUG", env_bool("DEBUG", True))
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or os.environ.get("SECRET_KEY", "")
 if not SECRET_KEY:
     if DEBUG:
         # 개발 전용 임시 키. 운영에서는 절대 사용되지 않는다.
@@ -43,6 +44,12 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost" if DEBUG else "")
 # HTTPS 도메인을 쓸 때 필수. 예: https://example.com,https://www.example.com
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+# Render 가 자동으로 넣어주는 호스트명 (예: mysite.onrender.com)
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 # ───────────── 앱 ─────────────
 INSTALLED_APPS = [
@@ -58,6 +65,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # 정적 파일 서빙 (Render)
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",  # CSRF 보호 (끄지 말 것)
@@ -87,7 +95,14 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 
 # ───────────── 데이터베이스 ─────────────
 # 기본은 SQLite(개발). 운영은 DB_ENGINE=postgres 로 PostgreSQL 사용을 권장한다.
-if os.environ.get("DB_ENGINE", "sqlite").lower() == "postgres":
+if os.environ.get("DATABASE_URL"):
+    # Render PostgreSQL (Internal Database URL)
+    import dj_database_url
+
+    DATABASES = {
+        "default": dj_database_url.config(conn_max_age=600, conn_health_checks=True)
+    }
+elif os.environ.get("DB_ENGINE", "sqlite").lower() == "postgres":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -153,9 +168,19 @@ USE_TZ = True
 
 # ───────────── 정적 / 미디어 파일 ─────────────
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"  # collectstatic 결과물 (Nginx 가 서빙)
+STATIC_ROOT = BASE_DIR / "staticfiles"  # collectstatic 결과물 (WhiteNoise / Nginx 가 서빙)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"  # 사용자 업로드 (Nginx 가 서빙)
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        # 개발(DEBUG=True)에서는 manifest 없이 동작, 운영에서는 압축 + 해시 파일명
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        if DEBUG
+        else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
