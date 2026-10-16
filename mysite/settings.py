@@ -155,7 +155,7 @@ if os.environ.get("EMAIL_HOST"):
     EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
     EMAIL_TIMEOUT = 10
 else:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    EMAIL_BACKEND = "mysite.mailbackend.FlushConsoleEmailBackend"
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Portfolio Board <noreply@example.com>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
