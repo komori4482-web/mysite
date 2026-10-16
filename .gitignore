@@ -1,8 +1,22 @@
-env.example
+# 가상환경
 .venv/
+venv/
+
+# 파이썬 캐시
 __pycache__/
-*.pyc
+*.py[cod]
+
+# 비밀값 (.env.example 은 예제이므로 올린다)
+.env
+.env.*
+!.env.example
+
+# 데이터베이스 / 업로드 / 배포 산출물
 db.sqlite3
 db.sqlite3.bak
 media/
 staticfiles/
+
+# 에디터 설정
+.idea/
+.vscode/
